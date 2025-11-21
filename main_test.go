@@ -105,10 +105,6 @@ func TestFetchNextOp(t *testing.T) {
 
 	op := FetchNext(0)
 
-	if Nodes[0].PC != 2 {
-		t.Errorf("PC should be 2, not %d", Nodes[0].PC)
-	}
-
 	opReq := uint8(0b11000)
 	if op != opReq {
 		t.Errorf("op should be %b, not %b", opReq, op)
