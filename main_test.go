@@ -96,3 +96,40 @@ func TestNeg(t *testing.T) {
 		}
 	}
 }
+
+func TestFetchNextOp(t *testing.T) {
+	Nodes = []Node{{}}
+
+	Nodes[0].Code = []uint8{0, 0b11000, 0b1000}
+	Nodes[0].PC = 1
+
+	op := FetchNext(0)
+
+	if Nodes[0].PC != 2 {
+		t.Errorf("PC should be 2, not %d", Nodes[0].PC)
+	}
+
+	opReq := uint8(0b11000)
+	if op != opReq {
+		t.Errorf("op should be %b, not %b", opReq, op)
+	}
+}
+
+func TestFetchNextPC(t *testing.T) {
+	tests := [][2]int{
+		{0, 1},
+		{2, 0},
+	}
+
+	Nodes = []Node{{}}
+	Nodes[0].Code = []uint8{0, 0, 0}
+
+	for _, test := range tests {
+		Nodes[0].PC = test[0]
+		FetchNext(0)
+
+		if Nodes[0].PC != test[1] {
+			t.Errorf("PC %d should be %d", Nodes[0].PC, test[1])
+		}
+	}
+}

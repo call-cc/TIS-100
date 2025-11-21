@@ -152,6 +152,30 @@ func MovNilPort(n int, dst PortName) {
 	MovNumPort(n, 0, dst)
 }
 
+func GetOp(op uint8) {
+
+}
+
+func FetchNext(n int) uint8 {
+	pc := Nodes[n].PC
+	op := Nodes[n].Code[pc]
+
+	if pc == len(Nodes[n].Code)-1 {
+		Nodes[n].PC = 0
+	} else {
+		Nodes[n].PC += 1
+	}
+
+	return op
+}
+
+func Run() {
+	for _, n := range Nodes {
+		GetOp(n.Code[0])
+	}
+	Cycle += 1
+}
+
 func main() {
 	Nodes = []Node{{}, {}, {}, {}}
 	Ports = []Port{
