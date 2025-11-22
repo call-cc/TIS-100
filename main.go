@@ -2,6 +2,9 @@
 
 ===[ INSTRUCTION SET ]===
 
+
+---[ ENCODING ]---
+
 5 bits for op code
 10 bits for numbers
 3 bits for port specification
@@ -20,31 +23,35 @@
 
 ---[ INSTRUCTIONS ]---
 
-00000000 NOP
-00001000 SWP
-00010000 SAV
-00011000 NEG
+Code     Name [Length in bytes] (Cycles)
+-----------------------------
+00000000 NOP [1] (1)
+00001000 SWP [1] (1)
+00010000 SAV [1] (1)
+00011000 NEG [1] (1)
 
-00100000 MOV number to ACC
-00101000 MOV port to port
-00110000 MOV ACC to port
-00111000 MOV port to ACC
-01000000 MOV number to port
-01001000 MOV port to number
+00100000 MOV number to ACC [2] (1)
+00101000 MOV port to port [2] (*)
+00110000 MOV ACC to port [1] (1)
+00111000 MOV port to ACC [1] (1)
+01000000 MOV number to port [3] (*)
+01001000 MOV port to number [3] (*)
 
-01010000 ADD number
-01011000 ADD port
+(*) 1 if writing NIL, 2 if writing Up, Down, Left, or Right
 
-01010000 SUB number
-01011000 SUB port
+01010000 ADD number [2] (1)
+01011000 ADD port [1] (1)
 
-01110000 JMP
-01111000 JEZ
-10000000 JNZ
-10001000 JGZ
-10010000 JLZ
-10011000 JRO offset
-10100000 JRO ACC
+01100000 SUB number [2] (1)
+01101000 SUB port [1] (1)
+
+01110000 JMP label [2] (1)
+01111000 JEZ label [2] (1)
+10000000 JNZ label [2] (1)
+10001000 JGZ label [2] (1)
+10010000 JLZ label [2] (1)
+10011000 JRO offset [2] (1)
+10100000 JRO ACC [1] (1)
 
 
 ---[ EXAMPLES ]---
