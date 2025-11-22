@@ -1,12 +1,10 @@
 /*
 
- - check numbers: -999..999
-
-
 ===[ INSTRUCTION SET ]===
 
 5 bits for op code
 10 bits for numbers
+3 bits for port specification
 
 
 ---[ PORTS ]---
@@ -31,20 +29,22 @@
 00101000 MOV port to port
 00110000 MOV ACC to port
 00111000 MOV port to ACC
+01000000 MOV number to port
+01001000 MOV port to number
 
-01000000 ADD number
-01001000 ADD port
+01010000 ADD number
+01011000 ADD port
 
 01010000 SUB number
 01011000 SUB port
 
-01100000 JMP
-01101000 JEZ
-01110000 JNZ
-01111000 JGZ
-10000000 JLZ
-10001000 JRO offset
-10010000 JRO ACC
+01110000 JMP
+01111000 JEZ
+10000000 JNZ
+10001000 JGZ
+10010000 JLZ
+10011000 JRO offset
+10100000 JRO ACC
 
 
 ---[ EXAMPLES ]---
