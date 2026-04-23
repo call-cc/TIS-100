@@ -12,17 +12,18 @@ func TestSwp(t *testing.T) {
 		},
 	}
 
-	oldAcc := Nodes[0].Acc
-	oldBak := Nodes[0].Bak
+	CurrentNode = 0
+	oldAcc := Nodes[CurrentNode].Acc
+	oldBak := Nodes[CurrentNode].Bak
 
-	Swp(0)
+	Swp()
 
-	if oldBak != Nodes[0].Acc {
-		t.Errorf("old BAK %d != new ACC %d", oldBak, Nodes[0].Acc)
+	if oldBak != Nodes[CurrentNode].Acc {
+		t.Errorf("old BAK %d != new ACC %d", oldBak, Nodes[CurrentNode].Acc)
 	}
 
-	if oldAcc != Nodes[0].Bak {
-		t.Errorf("old ACC %d != new BAK %d", oldAcc, Nodes[0].Bak)
+	if oldAcc != Nodes[CurrentNode].Bak {
+		t.Errorf("old ACC %d != new BAK %d", oldAcc, Nodes[CurrentNode].Bak)
 	}
 }
 
@@ -36,12 +37,13 @@ func TestAddNum(t *testing.T) {
 	}
 
 	Nodes = []Node{{}}
+	CurrentNode = 0
 
 	for _, test := range tests {
-		Nodes[0].Acc = test[0]
-		AddNum(0, test[1])
-		if Nodes[0].Acc != test[2] {
-			t.Errorf("ACC %d + %d != %d", Nodes[0].Acc, test[1], test[2])
+		Nodes[CurrentNode].Acc = test[0]
+		AddNum(test[1])
+		if Nodes[CurrentNode].Acc != test[2] {
+			t.Errorf("ACC %d + %d != %d", Nodes[CurrentNode].Acc, test[1], test[2])
 		}
 	}
 }
@@ -56,12 +58,13 @@ func TestSubNum(t *testing.T) {
 	}
 
 	Nodes = []Node{{}}
+	CurrentNode = 0
 
 	for _, test := range tests {
-		Nodes[0].Acc = test[0]
-		SubNum(0, test[1])
-		if Nodes[0].Acc != test[2] {
-			t.Errorf("ACC %d - %d != %d", Nodes[0].Acc, test[1], test[2])
+		Nodes[CurrentNode].Acc = test[0]
+		SubNum(test[1])
+		if Nodes[CurrentNode].Acc != test[2] {
+			t.Errorf("ACC %d - %d != %d", Nodes[CurrentNode].Acc, test[1], test[2])
 		}
 	}
 }
@@ -73,39 +76,40 @@ func TestBak(t *testing.T) {
 		},
 	}
 
-	Sav(0)
+	CurrentNode = 0
+	Sav()
 
-	if Nodes[0].Bak != Nodes[0].Acc {
-		t.Errorf("BAK %d != ACC %d", Nodes[0].Bak, Nodes[0].Acc)
+	if Nodes[CurrentNode].Bak != Nodes[CurrentNode].Acc {
+		t.Errorf("BAK %d != ACC %d", Nodes[CurrentNode].Bak, Nodes[CurrentNode].Acc)
 	}
 }
 
 func TestNeg(t *testing.T) {
 	vals := []int{-999, -100, 0, 50, 200}
 
-	Nodes = []Node{
-		{},
-	}
+	Nodes = []Node{{}}
+	CurrentNode = 0
 
 	for _, val := range vals {
-		Nodes[0].Acc = val
-		Neg(0)
+		Nodes[CurrentNode].Acc = val
+		Neg()
 
-		if Nodes[0].Acc != -val {
-			t.Errorf("ACC %d != -%d", Nodes[0].Acc, -val)
+		if Nodes[CurrentNode].Acc != -val {
+			t.Errorf("ACC %d != -%d", Nodes[CurrentNode].Acc, -val)
 		}
 	}
 }
 
 func TestFetchNextOp(t *testing.T) {
 	Nodes = []Node{{}}
+	CurrentNode = 0
 
-	Nodes[0].Code = []uint8{0, 0b11000, 0b1000}
-	Nodes[0].PC = 1
+	Nodes[CurrentNode].Code = []uint8{0, 0b11, 0b1}
+	Nodes[CurrentNode].PC = 1
 
-	op := FetchNext(0)
+	op := FetchNext()
 
-	opReq := uint8(0b11000)
+	opReq := uint8(0b11)
 	if op != opReq {
 		t.Errorf("op should be %b, not %b", opReq, op)
 	}
@@ -118,14 +122,15 @@ func TestFetchNextPC(t *testing.T) {
 	}
 
 	Nodes = []Node{{}}
-	Nodes[0].Code = []uint8{0, 0, 0}
+	CurrentNode = 0
+	Nodes[CurrentNode].Code = []uint8{0, 0, 0}
 
 	for _, test := range tests {
-		Nodes[0].PC = test[0]
-		FetchNext(0)
+		Nodes[CurrentNode].PC = test[0]
+		FetchNext()
 
-		if Nodes[0].PC != test[1] {
-			t.Errorf("PC %d should be %d", Nodes[0].PC, test[1])
+		if Nodes[CurrentNode].PC != test[1] {
+			t.Errorf("PC %d should be %d", Nodes[CurrentNode].PC, test[1])
 		}
 	}
 }

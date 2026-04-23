@@ -5,10 +5,16 @@
 
 ---[ ENCODING ]---
 
-5 bits for op code
-10 bits for numbers
+5 bits for op codes
+11 bits for numbers (-999 .. 999)
 3 bits for port specification
 
+
+Port1      Number        Unused
+| |        |           | ||
+000 00000  00000000  000 00 000
+    |   |                   | |
+    Opcode                  Port2
 
 ---[ PORTS ]---
 
@@ -23,41 +29,45 @@
 
 ---[ INSTRUCTIONS ]---
 
-Code     Name [Length in bytes] (Cycles)
+Code  Name [Length in bytes] (Cycles)
 -----------------------------
-00000000 NOP [1] (1)
-00001000 SWP [1] (1)
-00010000 SAV [1] (1)
-00011000 NEG [1] (1)
+00000 NOP [1] (1)
+00001 SWP [1] (1)
+00010 SAV [1] (1)
+00011 NEG [1] (1)
 
-00100000 MOV number to ACC [2] (1)
-00101000 MOV port to port [2] (*)
-00110000 MOV ACC to port [1] (1)
-00111000 MOV port to ACC [1] (1)
-01000000 MOV number to port [3] (*)
-01001000 MOV port to number [3] (*)
+00100 MOV number to ACC [2] (1)
+00101 MOV port to port [2] (*)
+00110 MOV ACC to port [1] (1)
+00111 MOV port to ACC [1] (1)
+01000 MOV number to port [3] (*)
+01001 MOV port to number [3] (*)
 
 (*) 1 if writing NIL, 2 if writing Up, Down, Left, or Right
 
-01010000 ADD number [2] (1)
-01011000 ADD port [1] (1)
+01010 ADD number [2] (1)
+01011 ADD port [1] (1)
 
-01100000 SUB number [2] (1)
-01101000 SUB port [1] (1)
+01100 SUB number [2] (1)
+01101 SUB port [1] (1)
 
-01110000 JMP label [2] (1)
-01111000 JEZ label [2] (1)
-10000000 JNZ label [2] (1)
-10001000 JGZ label [2] (1)
-10010000 JLZ label [2] (1)
-10011000 JRO offset [2] (1)
-10100000 JRO ACC [1] (1)
+01110 JMP label [2] (1)
+01111 JEZ label [2] (1)
+10000 JNZ label [2] (1)
+10001 JGZ label [2] (1)
+10010 JLZ label [2] (1)
+10011 JRO offset [2] (1)
+10100 JRO ACC [1] (1)
+
+11111 HCF [1] (1)
 
 
 ---[ EXAMPLES ]---
 
 MOV 33, ACC
-00100000 00100001
+00000100  00000100  00100000
+   |   |  |           |
+   MOV    33
 
 */
 
@@ -65,6 +75,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 type Node struct {
@@ -83,15 +94,33 @@ type Port struct {
 	Value     int
 }
 
+type OpCode struct {
+	Code     uint8
+	Name     string
+	Function func()
+}
+
+var OpCodes = map[int]func(){
+	0b00000: Nop,
+	0b00001: Swp,
+	0b00010: Sav,
+	0b00011: Neg,
+	0b11111: HCF,
+}
+
+var Ports []Port
+
+var Nodes []Node
+
+var CurrentNode int
+
+var Cycle uint
+
 type Number int
 
 type Reg string
 
 type PortName string
-
-var Ports []Port
-
-var Nodes []Node
 
 func findPort(n int, port string) (int, error) {
 	for idx := range Ports {
@@ -107,37 +136,37 @@ func findPort(n int, port string) (int, error) {
 	return 0, fmt.Errorf("Port '%s' not found", port)
 }
 
-func Swp(n int) {
-	Nodes[n].Acc, Nodes[n].Bak = Nodes[n].Bak, Nodes[n].Acc
+func Swp() {
+	Nodes[CurrentNode].Acc, Nodes[CurrentNode].Bak = Nodes[CurrentNode].Bak, Nodes[CurrentNode].Acc
 }
 
-func Sav(n int) {
-	Nodes[n].Bak = Nodes[n].Acc
+func Sav() {
+	Nodes[CurrentNode].Bak = Nodes[CurrentNode].Acc
 }
 
-func AddNum(n, a int) {
-	Nodes[n].Acc += a
+func AddNum(a int) {
+	Nodes[CurrentNode].Acc += a
 }
 
-func SubNum(n, a int) {
-	Nodes[n].Acc -= a
+func SubNum(a int) {
+	Nodes[CurrentNode].Acc -= a
 }
 
-func Nop(n int) {
+func Nop() {
 }
 
-func Neg(n int) {
-	Nodes[n].Acc = -Nodes[n].Acc
+func Neg() {
+	Nodes[CurrentNode].Acc = -Nodes[CurrentNode].Acc
 }
 
-func MovNumReg(n int, src Number, dst Reg) {
+func MovNumReg(src Number, dst Reg) {
 	// TODO types
-	Nodes[n].Acc = int(src)
+	Nodes[CurrentNode].Acc = int(src)
 }
 
-func MovNumPort(n int, src Number, dst PortName) error {
+func MovNumPort(src Number, dst PortName) error {
 	// TODO types
-	idx, err := findPort(n, string(dst))
+	idx, err := findPort(CurrentNode, string(dst))
 	if err != nil {
 		return err
 	}
@@ -147,48 +176,72 @@ func MovNumPort(n int, src Number, dst PortName) error {
 	return nil
 }
 
-func MovPortPort(n int, src PortName, dst PortName) {
+func MovPortPort(src PortName, dst PortName) {
 
 }
 
-func MovPortNil(n int, src PortName) {
+func MovPortNil(src PortName) {
 	// read from port and discard
 }
 
-func MovNilPort(n int, dst PortName) {
-	MovNumPort(n, 0, dst)
+func MovNilPort(dst PortName) {
+	_ = MovNumPort(0, dst)
 }
 
-func GetOp(op uint8) {
-
+func HCF() {
+	fmt.Println("Halt & Catch Fire")
+	os.Exit(0)
 }
 
-func FetchNext(n int) uint8 {
-	pc := Nodes[n].PC
-	op := Nodes[n].Code[pc]
+func GetOp(op uint8) (func(), error) {
+	op = op & 0b11111
+	fn, ok := OpCodes[int(op)]
+	if ok {
+		return fn, nil
+	}
 
-	if pc == len(Nodes[n].Code)-1 {
-		Nodes[n].PC = 0
+	return func() {}, fmt.Errorf("no instruction found: %0b", op)
+}
+
+func FetchNext() uint8 {
+	pc := Nodes[CurrentNode].PC
+	op := Nodes[CurrentNode].Code[pc]
+
+	if pc == len(Nodes[CurrentNode].Code)-1 {
+		Nodes[CurrentNode].PC = 0
 	} else {
-		Nodes[n].PC += 1
+		Nodes[CurrentNode].PC += 1
 	}
 
 	return op
 }
 
 func Run() {
-	for _, n := range Nodes {
-		GetOp(n.Code[0])
+	count := 20
+	for count > 0 {
+		for CurrentNode = range Nodes {
+			code := FetchNext()
+			op, err := GetOp(code)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Printf("Executing: %08b\n", code)
+			op()
+		}
+		count -= 1
+		// Cycle += 1
 	}
-	Cycle += 1
 }
 
 func main() {
-	Nodes = []Node{{}, {}, {}, {}}
+	Nodes = []Node{{Acc: 42, Code: []uint8{2, 0, 0}}}
 	Ports = []Port{
 		{0, 1, "Right", "Left", 0},
 		{0, 2, "Down", "Up", 0},
 		{1, 3, "Down", "Up", 0},
 		{2, 3, "Right", "Left", 0},
 	}
+
+	Run()
 }
