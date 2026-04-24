@@ -1,4 +1,4 @@
-===[ TECHNICAL DOCUMENTATION ]===
+***[ TECHNICAL DOCUMENTATION ]***
 
 
 ---[ PORTS ]---
@@ -9,69 +9,64 @@ UP
 DOWN
 ANY
 LAST
-NIL
+
+
+---[ SPECIAL ]---
+
+NIL: Reading it results in a 0. NIL can be used as a destination e.g. to
+     discard a value read from a port.
+
 
 ---[ INSTRUCTIONS ]---
 
 SRC: Port or Register or Integer
 DST: Port or Register
 
-NOP (ADD NIL)
-
 MOV <SRC>, <DST>
 
-SWP
-
-SAV
-
-ADD <SRC>
-
-SUB <SRC>
-
-NEG
-
-JMP <LABEL>
-
-JEZ <LABEL>
-
-JNZ <LABEL>
-
-JGZ <LABEL>
-
-JLZ <LABEL>
-
-JRO <SRC>
+===[ 1 BYTE INSTRUCTIONS ]===
 
 00000 NOP (ADD NIL)
 00001 SWP
 00010 SAV
 00011 NEG
-00100 JMP
-00101 JEZ
-00110 JNZ
-00111 JGZ
-01000 JLZ
+
+===[ 2 BYTE INSTRUCTIONS ]===
+
+00100 JMP Label
+00101 JEZ Label
+00110 JNZ Label
+00111 JGZ Label
+01000 JLZ Label
 01001 JRO Integer
 01010 JRO ACC
 01011 ADD Integer
 01100 ADD Port
 01101 SUB Integer
 01110 SUB Port
-01111 MOV ACC Port
-10000 MOV Integer ACC
-10001 MOV Integer Port
-10010 MOV Port ACC
-10011 MOV Port Port
-10100 MOV Nil ACC
+01111 Unused
+
+10000 MOV ACC Port
+10001 MOV Integer ACC
+10010 MOV Integer Port
+10011 MOV Port ACC
+10100 MOV Port Port
 10101 MOV Port Nil
 10110 MOV Nil Port
+
+===[ 1 BYTE INSTRUCTIONS ]===
+
+10111 MOV Nil ACC
+11000 MOV ACC Nil
 
 
 ---[ ENCODING VARIATIONS ]---
 
 5 bits for op codes
-11 bits for numbers in 2's complement (-999 .. 999)
+11 bits for numbers, highest bit is sign (-999 .. 999)
 3 bits for port specification (2x)
+
+
 
 
 [1.]
